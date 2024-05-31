@@ -20,6 +20,11 @@ address = os.getenv("ADDRESS")
 port = os.getenv("PORT")
 udl_passcode = os.getenv("UDL_PASSCODE")
 logging_level = os.getenv("LOGGING_LEVEL")
-number_of_zones = os.getenv("NUMBER_OF_ZONES")
+number_of_zones = None
+try:
+    number_of_zones = int(os.getenv("NUMBER_OF_ZONES"))
+except ValueError:
+    logging.error("NUMBER_OF_ZONES must be an integer.")
+    number_of_zones = None  # or a default value
 
 logging.basicConfig(level=logging_level)

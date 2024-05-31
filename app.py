@@ -1,16 +1,18 @@
+import queue
 import threading
 import time
 import logging
 
-from app_1 import read_zone_status_periodically
 from connection import create_connection, close_connection
 from authentication import authenticate_with_alarm
 from lcd_text import read_lcd_text_periodically
 from panel import panel_identification
 from reader import read_stream
+from send_command_queue import send_commands_from_queue
+from zone_status import read_zone_status_periodically
 
-# Create a lock
-conn_lock = threading.Lock()
+# Create a queue
+command_queue = queue.Queue(maxsize=100)
 
 def main():
     """
@@ -31,16 +33,21 @@ def main():
     stream_thread.daemon = True
     stream_thread.start()
 
+    command_sender_thread = threading.Thread(target=send_commands_from_queue, args=(conn, command_queue))
+    command_sender_thread.daemon = True
+    command_sender_thread.start()
+
     time.sleep(5)  # sleep for a few seconds to allow the panel to authenticate the connection
 
     # Add other functionalities here
     panel_identification(conn)
 
-    lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, conn_lock,))
-    lcd_text_thread.daemon = True
-    lcd_text_thread.start()
+    """NOTE: The following is commented out because it is causing errors when reading the response while polling the zone status."""
+    # lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
+    # lcd_text_thread.daemon = True
+    # lcd_text_thread.start()
 
-    zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, conn_lock,))
+    zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, command_queue,))
     zone_status_thread.daemon = True
     zone_status_thread.start()
 

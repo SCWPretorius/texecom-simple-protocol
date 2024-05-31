@@ -15,7 +15,6 @@ def decode_message(data):
     """
     try:
         hex_message = binascii.hexlify(data).decode()
-        logging.info(f"Response (hex): {hex_message}")
         """
         The zone status is returning the status of 17 zone for me as the following when all zones are closed:
         00000000000000000000000000000000000d0a
