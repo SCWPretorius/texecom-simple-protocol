@@ -10,12 +10,14 @@ load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
+
 def authenticate_with_alarm(conn, udl_passcode):
     command = f"\\W{udl_passcode}/"
     try:
         conn.sendall(command.encode())
     except Exception as e:
         logging.error(f"Failed to write to connection: {e}")
+
 
 def read_panel_identification(conn):
     command = "\\I/"
@@ -24,12 +26,14 @@ def read_panel_identification(conn):
     except Exception as e:
         logging.error(f"Error writing to connection: {e}")
 
+
 def read_lcd_text(conn):
     command = "\\L/"
     try:
         conn.sendall(command.encode())
     except Exception as e:
         logging.error(f"Error writing to connection: {e}")
+
 
 def read_stream(conn):
     try:
@@ -55,10 +59,12 @@ def read_stream(conn):
     except Exception as e:
         logging.error(f"Error reading from connection: {e}")
 
+
 def read_zone_status_periodically(conn):
     while True:
         read_zone_status(conn)
         time.sleep(1)
+
 
 def read_zone_status(conn):
     start_zone = 0x00
@@ -69,6 +75,7 @@ def read_zone_status(conn):
         conn.sendall(command.encode())
     except Exception as e:
         logging.error(f"Error writing to connection: {e}")
+
 
 def main():
     address = os.getenv("ADDRESS")
@@ -92,10 +99,10 @@ def main():
     read_panel_identification(conn)
     time.sleep(2)
     read_lcd_text(conn)
-    
-    # zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn,))
-    # zone_status_thread.daemon = True
-    # zone_status_thread.start()
+
+    zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn,))
+    zone_status_thread.daemon = True
+    zone_status_thread.start()
 
     try:
         while True:
@@ -104,6 +111,7 @@ def main():
         logging.info("Shutting down.")
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     main()
