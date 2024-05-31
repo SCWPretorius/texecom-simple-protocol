@@ -88,6 +88,6 @@ def read_stream(conn):
                 process_zone_status_response(response)
             elif response:
                 process_area_armed_response(response)
-                process_known_response(response)
+                # process_known_response(response)
     except Exception as e:
         logging.error(f"Error reading from connection: {e}")

@@ -43,9 +43,9 @@ def main():
     panel_identification(conn)
 
     """NOTE: The following is commented out because it is causing errors when reading the response while polling the zone status."""
-    # lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
-    # lcd_text_thread.daemon = True
-    # lcd_text_thread.start()
+    lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
+    lcd_text_thread.daemon = True
+    lcd_text_thread.start()
 
     zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, command_queue,))
     zone_status_thread.daemon = True
