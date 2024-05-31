@@ -9,6 +9,8 @@ from lcd_text import read_lcd_text_periodically
 from panel import panel_identification
 from reader import read_stream
 
+# Create a lock
+conn_lock = threading.Lock()
 
 def main():
     """
@@ -34,11 +36,11 @@ def main():
     # Add other functionalities here
     panel_identification(conn)
 
-    # lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn,))
-    # lcd_text_thread.daemon = True
-    # lcd_text_thread.start()
+    lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, conn_lock,))
+    lcd_text_thread.daemon = True
+    lcd_text_thread.start()
 
-    zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn,))
+    zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, conn_lock,))
     zone_status_thread.daemon = True
     zone_status_thread.start()
 

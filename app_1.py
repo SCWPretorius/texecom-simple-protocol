@@ -60,10 +60,11 @@ def read_stream(conn):
         logging.error(f"Error reading from connection: {e}")
 
 
-def read_zone_status_periodically(conn):
+def read_zone_status_periodically(conn, lock):
     while True:
-        read_zone_status(conn)
-        time.sleep(1)
+        with lock:
+            read_zone_status(conn)
+            time.sleep(1)
 
 
 def read_zone_status(conn):

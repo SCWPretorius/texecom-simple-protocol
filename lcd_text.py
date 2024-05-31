@@ -1,14 +1,15 @@
 import time
 from commands import send_command
 
-def read_lcd_text_periodically(conn):
+def read_lcd_text_periodically(conn, lock):
     """
     This function reads the LCD text periodically every 5 seconds.
     :param conn: The connection from which the LCD text is to be read.
     """
     while True:
-        lcd_text(conn)
-        time.sleep(5)
+        with lock:
+            lcd_text(conn)
+            time.sleep(5)
 
 def lcd_text(conn):
     """
