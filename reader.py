@@ -15,6 +15,9 @@ def decode_message(data):
     """
     try:
         hex_message = binascii.hexlify(data).decode()
+        # Split the hex message by '0d0a' and process each response separately
+        responses = hex_message.split('0d0a')
+        decoded_responses = []
         """
         The zone status is returning the status of 17 zone for me as the following when all zones are closed:
         00000000000000000000000000000000000d0a
@@ -23,13 +26,17 @@ def decode_message(data):
         if a zone is open the zone will read 01 instead of 00
         we need a better way of identifying this zone status, but for now it does the job
         """
-        hex_message_split = [hex_message[i:i + 2] for i in range(0, len(hex_message), 2)]
-        hex_message_split = hex_message_split[:-2]
-        if len(hex_message_split) == number_of_zones:
-            return hex_message_split
+        for response in responses:
+            # Split the response into 2 characters each
+            response_split = [response[i:i + 2] for i in range(0, len(response), 2)]
 
-        ascii_string = binascii.unhexlify(hex_message).decode().strip()
-        return ascii_string
+            if len(response_split) == number_of_zones:
+                decoded_responses.append(response_split)
+            else:
+                ascii_string = binascii.unhexlify(response).decode().strip()
+                decoded_responses.append(ascii_string)
+
+        return decoded_responses
     except binascii.Error as e:
         logging.error(f"Error decoding hex message: {e}")
         return None
@@ -42,14 +49,13 @@ def process_area_armed_response(ascii_string):
 
     :param ascii_string: The ASCII string to be processed.
     """
-    if ascii_string.startswith("AREA ARMED"):
-        index = ascii_string.find(">")
-        if index != -1:
-            response = ascii_string[index + 1:index + 5]
-            response_dict = {f"area{i + 1}": char for i, char in enumerate(response)}
-            logging.info(f"Received an AREA ARMED response: {response} - {response_dict}")
-        else:
-            logging.info(f"Received an AREA ARMED response without '>': {ascii_string}")
+    index = ascii_string.find(">")
+    if index != -1:
+        response = ascii_string[index + 1:index + 5]
+        response_dict = {f"area{i + 1}": char for i, char in enumerate(response)}
+        logging.info(f"Received an AREA ARMED response: {response} - {response_dict}")
+    else:
+        logging.info(f"Received an AREA ARMED response without '>': {ascii_string}")
 
 
 def process_known_response(ascii_string):
@@ -66,7 +72,7 @@ def process_known_response(ascii_string):
 
 
 def process_zone_status_response(zone_array):
-    zone_dict = {f"zone_{i + 1}": zone_array[i] for i in range(len(zone_array))}
+    zone_dict = {f"zone_{i + 1}": 'off' if zone_array[i] == '00' else 'on' for i in range(len(zone_array))}
     logging.info(f"Received a zone status response: {zone_dict}")
 
 
@@ -83,11 +89,13 @@ def read_stream(conn):
             if not data:
                 break
 
-            response = decode_message(data)
-            if isinstance(response, list):
-                process_zone_status_response(response)
-            elif response:
-                process_area_armed_response(response)
-                # process_known_response(response)
+            responses = decode_message(data)
+            for response in responses:
+                if isinstance(response, list):
+                    process_zone_status_response(response)
+                elif response.startswith("AREA ARMED"):
+                    process_area_armed_response(response)
+                elif response:
+                    process_known_response(response)
     except Exception as e:
         logging.error(f"Error reading from connection: {e}")

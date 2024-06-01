@@ -7,6 +7,7 @@ from connection import create_connection, close_connection
 from authentication import authenticate_with_alarm
 from lcd_text import read_lcd_text_periodically
 from panel import panel_identification
+from partition_output import partition_output
 from reader import read_stream
 from send_command_queue import send_commands_from_queue
 from zone_status import read_zone_status_periodically
@@ -42,10 +43,12 @@ def main():
     # Add other functionalities here
     panel_identification(conn)
 
-    """NOTE: The following is commented out because it is causing errors when reading the response while polling the zone status."""
-    lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
-    lcd_text_thread.daemon = True
-    lcd_text_thread.start()
+    # partition_output(conn)
+
+    """NOTE: The following is commented out because trying to focus on zones first"""
+    # lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
+    # lcd_text_thread.daemon = True
+    # lcd_text_thread.start()
 
     zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, command_queue,))
     zone_status_thread.daemon = True
