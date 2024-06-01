@@ -5,6 +5,9 @@ authenticates with the alarm, reads from the stream, identifies the panel, and r
 
 It is built and tested for the Texecom Premier 832 alarm panel. It should work for other Texecom panels such as the Premier 412 and Premier 816.
 
+## Notice
+I am busy rewriting my testing code into this repository with a bit more structure.
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
