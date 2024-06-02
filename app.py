@@ -19,9 +19,9 @@ from config import number_of_zones
 # Create a queue
 command_queue = queue.Queue(maxsize=100)
 
-def auto_discovery(mqtt_client):
+
+def zone_discovery(mqtt_client):
     for index in range(number_of_zones):
-        # Corrected topic for the sensor
         topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}"
         value_template = "{{ value_json.zone_status }}"
         name = f"Zone {index + 1}"
@@ -44,16 +44,41 @@ def auto_discovery(mqtt_client):
             "retain": True
         }
 
-        # Corrected config topic
         config_topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}/config"
         mqtt_client.publish_to_home_assistant(config_topic, json.dumps(config_payload))
 
-        json_message = {
-            "name": "Alarm Model",
-            "unique_id": "alarm_model",
-            "entity_category": "diagnostic",
-            "value_template": "{{ value_json.model }}",
-            "state_topic": "homeassistant/sensor/texecom_alarm/panel_model",
+
+def panel_model_discovery(mqtt_client):
+    json_message = {
+        "name": "Alarm Model",
+        "unique_id": "alarm_model",
+        "entity_category": "diagnostic",
+        "value_template": "{{ value_json.model }}",
+        "state_topic": "homeassistant/sensor/texecom_alarm/panel_model",
+        "device": {
+            "identifiers": "alarm_panel",
+            "name": "Texecom Premier",
+            "manufacturer": "Texecom",
+            "model": "Premier 832"
+        },
+        "qos": 0,
+        "retain": True
+    }
+
+    mqtt_client.publish_to_home_assistant("homeassistant/sensor/texecom_alarm/config", json.dumps(json_message))
+
+
+def partition_status_discovery(mqtt_client):
+    for index in range(4):
+        topic = f"homeassistant/sensor/texecom_alarm/partition_{index + 1}_status"
+        value_template = "{{ value_json.partition_status }}"
+        name = f"Partition {index + 1} Status"
+        unique_id = f"partition_{index + 1}_status"
+        config_payload = {
+            "name": name,
+            "unique_id": unique_id,
+            "state_topic": topic,
+            "value_template": value_template,
             "device": {
                 "identifiers": "alarm_panel",
                 "name": "Texecom Premier",
@@ -64,7 +89,13 @@ def auto_discovery(mqtt_client):
             "retain": True
         }
 
-        mqtt_client.publish_to_home_assistant("homeassistant/sensor/texecom_alarm/config", json.dumps(json_message))
+        mqtt_client.publish_to_home_assistant(f"homeassistant/sensor/texecom_alarm/partition_{index + 1}_status/config", json.dumps(config_payload))
+
+
+def auto_discovery(mqtt_client):
+    zone_discovery(mqtt_client)
+    panel_model_discovery(mqtt_client)
+    partition_status_discovery(mqtt_client)
 
 
 def main():
@@ -101,10 +132,10 @@ def main():
 
     # partition_output(conn)
 
-    """NOTE: The following is commented out because trying to focus on zones first"""
-    # lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
-    # lcd_text_thread.daemon = True
-    # lcd_text_thread.start()
+    """NOTE: Using this, because having trouble with partition_output"""
+    lcd_text_thread = threading.Thread(target=read_lcd_text_periodically, args=(conn, command_queue,))
+    lcd_text_thread.daemon = True
+    lcd_text_thread.start()
 
     zone_status_thread = threading.Thread(target=read_zone_status_periodically, args=(conn, command_queue,))
     zone_status_thread.daemon = True

@@ -4,7 +4,7 @@ from commands import send_command
 def partition_output(conn):
 
     partition_start = 0x08
-    num_partitions = 0x02
+    num_partitions = 0x01
     command = f"\\P{chr(partition_start)}{chr(num_partitions)}/"
     send_command(conn, command)
 

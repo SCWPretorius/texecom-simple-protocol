@@ -5,8 +5,8 @@ class MQTTClient:
     def __init__(self):
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
-        self.client.on_publish = self.on_publish
-        self.client.on_message = self.on_message  # Set the message callback
+        # self.client.on_publish = self.on_publish
+        self.client.on_message = self.on_message
 
         # Set the username and password
         self.client.username_pw_set(username=mqtt_username, password=mqtt_password)

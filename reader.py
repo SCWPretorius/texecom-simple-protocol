@@ -43,7 +43,7 @@ def decode_message(data):
         return None
 
 
-def process_area_armed_response(ascii_string):
+def process_partition_armed_response(ascii_string, mqtt_client):
     """
     This function checks if the ASCII string starts with "AREA ARMED". If it does, it finds the position of ">",
     extracts the part of the string after ">", and creates a dictionary from the characters.
@@ -53,8 +53,23 @@ def process_area_armed_response(ascii_string):
     index = ascii_string.find(">")
     if index != -1:
         response = ascii_string[index + 1:index + 5]
-        response_dict = {f"area{i + 1}": char for i, char in enumerate(response)}
-        logging.info(f"Received an AREA ARMED response: {response} - {response_dict}")
+        response_dict = {f"partition_{i + 1}": 'Not Armed' if char == '.' else 'Armed' for i, char in enumerate(response)}
+
+        for partition, status in response_dict.items():
+            topic = f"homeassistant/sensor/texecom_alarm/{partition}_status"
+            print(topic)
+            payload = {
+                "partition_status": status,
+                "device": {
+                    "identifiers": "alarm_panel",
+                    "name": "Texecom Premier",
+                    "manufacturer": "Texecom",
+                    "model": "Premier 832"
+                },
+                "qos": 0,
+                "retain": True
+            }
+            mqtt_client.publish_to_home_assistant(topic, json.dumps(payload))
     else:
         logging.info(f"Received an AREA ARMED response without '>': {ascii_string}")
 
@@ -90,7 +105,6 @@ def process_known_response(ascii_string, mqtt_client):
 
 def process_zone_status_response(zone_array, mqtt_client):
     for index, zone in enumerate(zone_array):
-        # Corrected topic for the sensor
         topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}"
         payload = {
             "zone_status": "OFF" if zone == '00' else "ON",
@@ -124,7 +138,7 @@ def read_stream(conn, mqtt_client):
                 if isinstance(response, list):
                     process_zone_status_response(response, mqtt_client)
                 elif response.startswith("AREA ARMED"):
-                    process_area_armed_response(response)
+                    process_partition_armed_response(response, mqtt_client)
                 elif response:
                     process_known_response(response, mqtt_client)
     except Exception as e:
