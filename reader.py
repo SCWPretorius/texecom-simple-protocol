@@ -1,4 +1,5 @@
 import binascii
+import json
 import logging
 
 from config import number_of_zones
@@ -58,25 +59,54 @@ def process_area_armed_response(ascii_string):
         logging.info(f"Received an AREA ARMED response without '>': {ascii_string}")
 
 
-def process_known_response(ascii_string):
+def process_known_response(ascii_string, mqtt_client):
     """
     This function checks if the ASCII string is a known response. If it is, it logs the response type.
 
     :param ascii_string: The ASCII string to be checked.
     """
     response_type = KNOWN_RESPONSES.get(ascii_string)
-    if response_type:
+    if response_type == "Panel Identification":
+        formatted_panel_id = ascii_string.replace("V", " V")
+        payload = {
+            "model": formatted_panel_id,
+            "device": {
+                "identifiers": "alarm_panel",
+                "name": "Texecom Premier",
+                "manufacturer": "Texecom",
+                "model": "Premier 832"
+            },
+            "qos": 0,
+            "retain": True
+        }
+
+        mqtt_client.publish_to_home_assistant("homeassistant/sensor/texecom_alarm/panel_model", json.dumps(payload))
+        logging.info(f"Received a {response_type} response: {ascii_string}")
+    elif response_type:
         logging.info(f"Received a {response_type} response: {ascii_string}")
     else:
         logging.info(f"Received an unknown response: {ascii_string}")
 
 
-def process_zone_status_response(zone_array):
-    zone_dict = {f"zone_{i + 1}": 'off' if zone_array[i] == '00' else 'on' for i in range(len(zone_array))}
-    logging.info(f"Received a zone status response: {zone_dict}")
+def process_zone_status_response(zone_array, mqtt_client):
+    for index, zone in enumerate(zone_array):
+        # Corrected topic for the sensor
+        topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}"
+        payload = {
+            "zone_status": "OFF" if zone == '00' else "ON",
+            "device": {
+                "identifiers": "alarm_panel",
+                "name": "Texecom Premier",
+                "manufacturer": "Texecom",
+                "model": "Premier 832"
+            },
+            "qos": 0,
+            "retain": True
+        }
+        mqtt_client.publish_to_home_assistant(topic, json.dumps(payload))
 
 
-def read_stream(conn):
+def read_stream(conn, mqtt_client):
     """
     This function reads data from a connection in a loop. For each chunk of data, it decodes the message,
     processes the "AREA ARMED" response, and processes known responses.
@@ -92,10 +122,10 @@ def read_stream(conn):
             responses = decode_message(data)
             for response in responses:
                 if isinstance(response, list):
-                    process_zone_status_response(response)
+                    process_zone_status_response(response, mqtt_client)
                 elif response.startswith("AREA ARMED"):
                     process_area_armed_response(response)
                 elif response:
-                    process_known_response(response)
+                    process_known_response(response, mqtt_client)
     except Exception as e:
         logging.error(f"Error reading from connection: {e}")

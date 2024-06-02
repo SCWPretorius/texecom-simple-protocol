@@ -1,3 +1,4 @@
+import json
 import queue
 import threading
 import time
@@ -11,9 +12,60 @@ from partition_output import partition_output
 from reader import read_stream
 from send_command_queue import send_commands_from_queue
 from zone_status import read_zone_status_periodically
+from mqtt import MQTTClient
+
+from config import number_of_zones
 
 # Create a queue
 command_queue = queue.Queue(maxsize=100)
+
+def auto_discovery(mqtt_client):
+    for index in range(number_of_zones):
+        # Corrected topic for the sensor
+        topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}"
+        value_template = "{{ value_json.zone_status }}"
+        name = f"Zone {index + 1}"
+        unique_id = f"zone_{index + 1}"
+        config_payload = {
+            "name": name,
+            "unique_id": unique_id,
+            "state_topic": topic,
+            "value_template": value_template,
+            "device_class": "motion",
+            "payload_on": "ON",
+            "payload_off": "OFF",
+            "device": {
+                "identifiers": "alarm_panel",
+                "name": "Texecom Premier",
+                "manufacturer": "Texecom",
+                "model": "Premier 832"
+            },
+            "qos": 0,
+            "retain": True
+        }
+
+        # Corrected config topic
+        config_topic = f"homeassistant/binary_sensor/texecom_alarm/zone_{index + 1}/config"
+        mqtt_client.publish_to_home_assistant(config_topic, json.dumps(config_payload))
+
+        json_message = {
+            "name": "Alarm Model",
+            "unique_id": "alarm_model",
+            "entity_category": "diagnostic",
+            "value_template": "{{ value_json.model }}",
+            "state_topic": "homeassistant/sensor/texecom_alarm/panel_model",
+            "device": {
+                "identifiers": "alarm_panel",
+                "name": "Texecom Premier",
+                "manufacturer": "Texecom",
+                "model": "Premier 832"
+            },
+            "qos": 0,
+            "retain": True
+        }
+
+        mqtt_client.publish_to_home_assistant("homeassistant/sensor/texecom_alarm/config", json.dumps(json_message))
+
 
 def main():
     """
@@ -24,13 +76,17 @@ def main():
 
     This function does not take any parameters and does not return anything.
     """
+    mqttClient = MQTTClient()
+
+    auto_discovery(mqttClient)
+
     conn = create_connection()
     if conn is None:
         return
 
     authenticate_with_alarm(conn)
 
-    stream_thread = threading.Thread(target=read_stream, args=(conn,))
+    stream_thread = threading.Thread(target=read_stream, args=(conn, mqttClient,))
     stream_thread.daemon = True
     stream_thread.start()
 
