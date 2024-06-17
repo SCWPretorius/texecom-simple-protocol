@@ -1,23 +1,22 @@
-# Texecom Simple Protocol
+# Texecom Alarm MQTT Interface
 
-This is a Python-based project that interacts with an alarm system. It establishes a connection, 
-authenticates with the alarm, reads from the stream, identifies the panel, and reads the LCD text and zone status periodically.
+This project provides an interface between a Texecom alarm system and an MQTT broker. 
+It is written in Python and uses the MQTT protocol to publish alarm status updates to a Home Assistant instance.
 
-It is built and tested for the Texecom Premier 832 alarm panel. It should work for other Texecom panels such as the Premier 412 and Premier 816.
+## Features
 
-## Notice
-I am busy rewriting my testing code into this repository with a bit more structure.
+- Decodes messages from the Texecom alarm system.
+- Processes "AREA ARMED" responses from keypad.
+- Processes zone status responses.
+- Publishes updates to Home Assistant via MQTT.
 
-## Getting Started
+## Requirements
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+- Python 3.6 or higher
+- An MQTT broker (e.g., Mosquitto)
+- A Texecom Premier 832 alarm system
 
-### Prerequisites
-
-- Python
-- pip
-
-### Installing
+## Installation
 
 Clone the repository to your local machine:
 
@@ -31,35 +30,24 @@ Navigate to the project directory:
 cd texecom-simple-protocol
 ```
 
-Install the required packages:
+## Usage
 
+This application can be run using Docker. Here are the steps to do so:
+
+1. Build the Docker image:
 ```bash
-pip install -r requirements.txt
+docker build -t texecom-simple-protocol .
+```
+2. Run the Docker container:
+```bash
+docker run -d --name texecom-simple-protocol texecom-simple-protocol
 ```
 
-## Running the Application
+## Contributing
 
-To run the application, execute the following command:
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-```bash
-python app.py
-```
-
-## Project Structure
-
-The project has several Python scripts:
-
-- `app.py`: The main application script.
-- `commands.py`: Contains a function to send a command to a given connection.
-- `lcd_text.py`: Contains a function to read the LCD text periodically.
-- `send_command_queue.py`: Contains functions to send commands to a queue and read commands from a queue.
-- `connection.py`: Contains functions to create and close a connection.
-- `authentication.py`: Contains a function to authenticate with the alarm.
-- `panel.py`: Contains a function to identify the panel.
-- `reader.py`: Contains a function to read from the stream.
-- `zone_status.py`: Contains a function to read the zone status periodically.
-
-##  Notice
+## License
 
 This project was built through reverse engineering and debugging the alarm panel using the serial connection. 
 It has also utilized resources from the following GitHub repositories:
