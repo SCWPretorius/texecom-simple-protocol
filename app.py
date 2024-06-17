@@ -70,7 +70,7 @@ def panel_model_discovery(mqtt_client):
 
 def partition_status_discovery(mqtt_client):
     for index in range(4):
-        topic = f"homeassistant/sensor/texecom_alarm/partition_{index + 1}_status"
+        topic = f"homeassistant/binary_sensor/texecom_alarm/partition_{index + 1}_status"
         value_template = "{{ value_json.partition_status }}"
         name = f"Partition {index + 1} Status"
         unique_id = f"partition_{index + 1}_status"
@@ -89,7 +89,7 @@ def partition_status_discovery(mqtt_client):
             "retain": True
         }
 
-        mqtt_client.publish_to_home_assistant(f"homeassistant/sensor/texecom_alarm/partition_{index + 1}_status/config", json.dumps(config_payload))
+        mqtt_client.publish_to_home_assistant(f"homeassistant/binary_sensor/texecom_alarm/partition_{index + 1}_status/config", json.dumps(config_payload))
 
 
 def auto_discovery(mqtt_client):

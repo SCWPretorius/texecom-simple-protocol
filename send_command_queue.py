@@ -1,5 +1,4 @@
 import logging
-import time
 
 
 def send_command_to_queue(conn, command, command_queue):

@@ -53,13 +53,12 @@ def process_partition_armed_response(ascii_string, mqtt_client):
     index = ascii_string.find(">")
     if index != -1:
         response = ascii_string[index + 1:index + 5]
-        response_dict = {f"partition_{i + 1}": 'Not Armed' if char == '.' else 'Armed' for i, char in enumerate(response)}
+        response_dict = {f"partition_{i + 1}": '0' if char == '.' else '1' for i, char in enumerate(response)}
 
         for partition, status in response_dict.items():
-            topic = f"homeassistant/sensor/texecom_alarm/{partition}_status"
-            print(topic)
+            topic = f"homeassistant/binary_sensor/texecom_alarm/{partition}_status"
             payload = {
-                "partition_status": status,
+                "partition_status": "OFF" if status == '0' else "ON",
                 "device": {
                     "identifiers": "alarm_panel",
                     "name": "Texecom Premier",
@@ -139,7 +138,7 @@ def read_stream(conn, mqtt_client):
                     process_zone_status_response(response, mqtt_client)
                 elif response.startswith("AREA ARMED"):
                     process_partition_armed_response(response, mqtt_client)
-                elif response:
-                    process_known_response(response, mqtt_client)
+                # elif response:
+                #     process_known_response(response, mqtt_client)
     except Exception as e:
         logging.error(f"Error reading from connection: {e}")

@@ -1,5 +1,4 @@
 import time
-from commands import send_command
 from send_command_queue import send_command_to_queue
 
 

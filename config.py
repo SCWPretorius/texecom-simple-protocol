@@ -1,8 +1,8 @@
 import logging
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()
 
 """
 This module is used for configuration settings. It loads environment variables from a .env file using the dotenv module.
@@ -19,7 +19,7 @@ The module also sets up basic logging configuration with the specified logging l
 address = os.getenv("ADDRESS")
 port = os.getenv("PORT")
 udl_passcode = os.getenv("UDL_PASSCODE")
-logging_level = os.getenv("LOGGING_LEVEL")
+logging_level = "ERROR"
 
 mqtt_broker_ip = os.getenv("MQTT_BROKER_IP")
 mqtt_broker_port = None
